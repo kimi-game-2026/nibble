@@ -18,7 +18,13 @@ export class World {
     const densityAt = (x, z) => noise.fbm(x * CLUSTER_FREQUENCY, z * CLUSTER_FREQUENCY, { octaves: 3 });
     const painters = [new Bushes(config), new Trees(config), new Flowers(config)];
     this.tiles = new TileField(scene, this.terrain, painters, this.collisions, seed, densityAt);
-    this.enemies = new Enemies(scene, (x, z) => this.heightAt(x, z), config, seed);
+    this.enemies = new Enemies(
+      scene,
+      (x, z) => this.heightAt(x, z),
+      config,
+      seed,
+      (from, to) => this.hasLineOfSight(from, to)
+    );
     this.clouds = new Clouds(config);
     scene.add(this.clouds.group);
   }
@@ -29,6 +35,10 @@ export class World {
 
   resolveCollisions(pos, radius) {
     this.collisions.resolve(pos, radius);
+  }
+
+  hasLineOfSight(from, to) {
+    return this.collisions.hasLineOfSight(from, to);
   }
 
   update(dt, camPos, worm) {

@@ -5,7 +5,7 @@ import { Enemy } from './Enemy.js';
 const RESPAWN_INTERVAL = 0.15;
 
 export class Enemies {
-  constructor(scene, heightAt, config, seed) {
+  constructor(scene, heightAt, config, seed, canSee = () => true) {
     this.heightAt = heightAt;
     this.config = config;
     this.count = config.enemyCount;
@@ -14,6 +14,7 @@ export class Enemies {
     this.despawnRadius = config.enemyDespawnRadius;
     this.maxLevel = config.enemyMaxLevel;
     this.debugMode = config.enemyDebugMode;
+    this.canSee = canSee;
     this.rng = createRng(seed ^ 0x9e3779b9);
     this.enemies = [];
     this.group = new THREE.Group();
@@ -31,7 +32,7 @@ export class Enemies {
     const focusPos = worm.position;
     for (let i = this.enemies.length - 1; i >= 0; i--) {
       const enemy = this.enemies[i];
-      enemy.update(dt, focusPos);
+      enemy.update(dt, focusPos, this.canSee);
       const dx = enemy.position.x - focusPos.x;
       const dz = enemy.position.z - focusPos.z;
       const collisionRadius = enemy.radius + worm.radius;

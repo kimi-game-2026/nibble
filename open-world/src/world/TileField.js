@@ -89,6 +89,7 @@ export class TileField {
       heightAt: (x, z) => this.terrain.heightAt(x, z),
       densityAt: this.densityAt,
       addCollider: (x, z, r) => this.collisions.addCircle(x, z, r, key),
+      addOccluder: (x, z, r) => this.collisions.addOccluder(x, z, r, key),
       pieces,
     };
     for (const painter of this.painters) painter.paint(ctx);

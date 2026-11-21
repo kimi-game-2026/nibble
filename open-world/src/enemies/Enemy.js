@@ -65,13 +65,14 @@ export class Enemy {
     this.debugRing.material.dispose();
   }
 
-  update(dt, focusPos) {
+  update(dt, focusPos, canSee = () => true) {
     this.time += dt;
     this.turnTimer -= dt;
     const dx = focusPos.x - this.position.x;
     const dz = focusPos.z - this.position.z;
     const distance = Math.hypot(dx, dz);
-    const chasing = distance <= this.detectionRadius;
+    const wasChasing = this.chasing;
+    const chasing = distance <= this.detectionRadius && canSee(this.position, focusPos);
     if (chasing !== this.chasing) {
       this.chasing = chasing;
       this.debugRing.material.color.set(chasing ? 0xff3b30 : 0x48cae4);
@@ -80,10 +81,13 @@ export class Enemy {
     if (chasing) {
       if (distance > 0.001) this.targetHeading = Math.atan2(dx, dz);
       this.targetMoveAmount = distance > 0.8 + this.model.scale.x * 0.6 ? 1 : 0;
-    } else if (this.turnTimer <= 0) {
-      this.turnTimer = 1.8 + this.rng() * 3.2;
-      this.targetHeading = this.heading + (this.rng() - 0.5) * Math.PI * 1.6;
-      this.targetMoveAmount = this.rng() < 0.25 ? 0 : 0.65 + this.rng() * 0.5;
+    } else {
+      if (wasChasing) this.turnTimer = 0;
+      if (this.turnTimer <= 0) {
+        this.turnTimer = 1.8 + this.rng() * 3.2;
+        this.targetHeading = this.heading + (this.rng() - 0.5) * Math.PI * 1.6;
+        this.targetMoveAmount = this.rng() < 0.25 ? 0 : 0.65 + this.rng() * 0.5;
+      }
     }
 
     const difference = this.targetHeading - this.heading;
