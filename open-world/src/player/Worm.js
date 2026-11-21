@@ -19,6 +19,7 @@ export class Worm {
     this.heading = 0;
     this.time = 0;
     this.moving = false;
+    this.speedMultiplier = 1;
     this.group = new THREE.Group();
     this.position = this.group.position;
     this.creature = null;
@@ -79,8 +80,9 @@ export class Worm {
     let diff = target - this.heading;
     diff = Math.atan2(Math.sin(diff), Math.cos(diff));
     this.heading += diff * Math.min(1, TURN_SPEED * dt);
-    this.position.x += Math.sin(this.heading) * this.walkSpeed * dt;
-    this.position.z += Math.cos(this.heading) * this.walkSpeed * dt;
+    const speed = this.walkSpeed * this.speedMultiplier;
+    this.position.x += Math.sin(this.heading) * speed * dt;
+    this.position.z += Math.cos(this.heading) * speed * dt;
   }
 
   update(dt) {

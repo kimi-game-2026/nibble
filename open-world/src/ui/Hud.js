@@ -34,7 +34,16 @@ export class Hud {
     this.invincibility.className = 'invincibility';
     this.invincibility.hidden = true;
 
-    this.root.append(this.portrait, this.bar, this.label, this.invincibility);
+    this.skillBar = document.createElement('div');
+    this.skillBar.className = 'skills';
+    this.skills = {
+      Q: this.#makeSkillSlot(this.#drawPineappleIcon()),
+      E: this.#makeSkillSlot(this.#drawDurianIcon()),
+      R: this.#makeSkillSlot(this.#drawAloeIcon()),
+    };
+    this.skillBar.append(this.skills.Q.root, this.skills.E.root, this.skills.R.root);
+
+    this.root.append(this.portrait, this.bar, this.label, this.invincibility, this.skillBar);
     document.body.appendChild(this.root);
 
     this.setCharacter(character, form);
@@ -62,6 +71,44 @@ export class Hud {
   setInvincibility(seconds) {
     this.invincibility.hidden = seconds <= 0;
     this.invincibility.textContent = `INVINCIBLE ${seconds.toFixed(1)}s`;
+  }
+
+  /** Banked skill: show its slot with a pulsing key hint ('Q' or 'E'). */
+  setSkillAvailable(key) {
+    const slot = this.skills[key];
+    slot.root.hidden = false;
+    slot.root.classList.add('available');
+    slot.root.style.background = 'rgba(255, 255, 255, 0.45)';
+    slot.badge.textContent = key;
+  }
+
+  /** Timed skill running: drain the ring and count down whole seconds. */
+  setSkillActive(key, remaining, duration) {
+    const slot = this.skills[key];
+    slot.root.hidden = false;
+    slot.root.classList.remove('available');
+    const deg = Math.max(0, remaining / duration) * 360;
+    slot.root.style.background = `conic-gradient(#8fce6a ${deg}deg, rgba(255, 255, 255, 0.35) ${deg}deg)`;
+    slot.badge.textContent = Math.ceil(remaining);
+  }
+
+  clearSkill(key) {
+    const slot = this.skills[key];
+    slot.root.hidden = true;
+    slot.root.classList.remove('available');
+  }
+
+  #makeSkillSlot(iconCanvas) {
+    const root = document.createElement('div');
+    root.className = 'skill';
+    root.hidden = true;
+    const inner = document.createElement('div');
+    inner.className = 'skill-inner';
+    inner.appendChild(iconCanvas);
+    const badge = document.createElement('div');
+    badge.className = 'skill-badge';
+    root.append(inner, badge);
+    return { root, badge };
   }
 
   /** Brief glow flash on the XP bar (e.g. on level-up). */
@@ -193,5 +240,117 @@ export class Hud {
       ctx.fillRect(-12, -3, 24, 6);
       ctx.restore();
     }
+  }
+
+  /** Small pineapple icon for the skill slot. */
+  #drawPineappleIcon() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 64;
+    canvas.height = 64;
+    const ctx = canvas.getContext('2d');
+
+    // leaf crown
+    ctx.fillStyle = '#4e9b47';
+    for (const [dx, h] of [[-10, 13], [0, 18], [10, 13]]) {
+      ctx.beginPath();
+      ctx.moveTo(32 + dx - 5, 24);
+      ctx.lineTo(32 + dx, 24 - h);
+      ctx.lineTo(32 + dx + 5, 24);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    // body with crosshatch, clipped to the oval
+    ctx.fillStyle = '#f2b63d';
+    ctx.beginPath();
+    ctx.ellipse(32, 41, 15, 18, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.save();
+    ctx.beginPath();
+    ctx.ellipse(32, 41, 15, 18, 0, 0, Math.PI * 2);
+    ctx.clip();
+    ctx.strokeStyle = 'rgba(176, 116, 28, 0.55)';
+    ctx.lineWidth = 2;
+    for (let i = -3; i <= 3; i++) {
+      ctx.beginPath(); ctx.moveTo(32 + i * 10 - 18, 59); ctx.lineTo(32 + i * 10 + 18, 23); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(32 + i * 10 + 18, 59); ctx.lineTo(32 + i * 10 - 18, 23); ctx.stroke();
+    }
+    ctx.restore();
+
+    return canvas;
+  }
+
+  /** Small durian icon for the E skill slot. */
+  #drawDurianIcon() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 64;
+    canvas.height = 64;
+    const ctx = canvas.getContext('2d');
+    const cx = 32, cy = 34, rx = 15, ry = 18;
+
+    // husk spikes around the perimeter, tips outward
+    ctx.fillStyle = '#6f7d2e';
+    for (let i = 0; i < 12; i++) {
+      const a = (i / 12) * Math.PI * 2;
+      const bx = cx + Math.cos(a) * rx;
+      const by = cy + Math.sin(a) * ry;
+      const tx = cx + Math.cos(a) * (rx + 7);
+      const ty = cy + Math.sin(a) * (ry + 7);
+      const px = -Math.sin(a) * 3.5, py = Math.cos(a) * 3.5;
+      ctx.beginPath();
+      ctx.moveTo(bx + px, by + py);
+      ctx.lineTo(tx, ty);
+      ctx.lineTo(bx - px, by - py);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    // body
+    ctx.fillStyle = '#9aa53f';
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(111, 125, 46, 0.6)';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(cx - 8, cy - 10); ctx.lineTo(cx + 4, cy + 10); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx + 2, cy - 12); ctx.lineTo(cx + 10, cy + 4); ctx.stroke();
+
+    return canvas;
+  }
+
+  /** Small aloe vera icon for the R skill slot: a rosette of thick pointed leaves. */
+  #drawAloeIcon() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 64;
+    canvas.height = 64;
+    const ctx = canvas.getContext('2d');
+
+    // back leaves (darker, leaning out)
+    for (const [dx, tilt, h] of [[-16, -0.7, 26], [16, 0.7, 26], [-8, -0.35, 32], [8, 0.35, 32]]) {
+      ctx.save();
+      ctx.translate(32 + dx, 54);
+      ctx.rotate(tilt);
+      ctx.fillStyle = '#5da75d';
+      ctx.beginPath();
+      ctx.moveTo(-6, 0);
+      ctx.lineTo(0, -h);
+      ctx.lineTo(6, 0);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+    // front center leaf (lightest)
+    ctx.save();
+    ctx.translate(32, 56);
+    ctx.fillStyle = '#8fce8f';
+    ctx.beginPath();
+    ctx.moveTo(-7, 0);
+    ctx.lineTo(0, -36);
+    ctx.lineTo(7, 0);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+
+    return canvas;
   }
 }

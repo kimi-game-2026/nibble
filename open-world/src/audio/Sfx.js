@@ -84,6 +84,41 @@ export function chomp(ctx, destination) {
   }
 }
 
+/** Sharp little "quip!" when the durian spike launches. */
+export function quip(ctx, destination) {
+  const t0 = ctx.currentTime;
+
+  // Snappy pitch-drop blip
+  const osc = ctx.createOscillator();
+  osc.type = 'square';
+  osc.frequency.setValueAtTime(880, t0);
+  osc.frequency.exponentialRampToValueAtTime(420, t0 + 0.08);
+  const bp = ctx.createBiquadFilter();
+  bp.type = 'bandpass';
+  bp.frequency.value = 1200;
+  bp.Q.value = 1;
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(0.22, t0 + 0.01);
+  g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.11);
+  osc.connect(bp).connect(g).connect(destination);
+  osc.start(t0);
+  osc.stop(t0 + 0.12);
+
+  // Tiny air puff under it
+  const src = ctx.createBufferSource();
+  src.buffer = getNoiseBuffer(ctx);
+  const hp = ctx.createBiquadFilter();
+  hp.type = 'highpass';
+  hp.frequency.value = 2000;
+  const ng = ctx.createGain();
+  ng.gain.setValueAtTime(0.12, t0);
+  ng.gain.exponentialRampToValueAtTime(0.001, t0 + 0.09);
+  src.connect(hp).connect(ng).connect(destination);
+  src.start(t0);
+  src.stop(t0 + 0.1);
+}
+
 /** Cartoonish falling "aargh" when the worm takes a hit, with an impact thud. */
 export function hurt(ctx, destination) {
   const t0 = ctx.currentTime;

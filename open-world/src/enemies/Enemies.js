@@ -41,6 +41,23 @@ export class Enemies {
     this.enemyEatenCb = cb;
   }
 
+  /** Removes the first enemy within radius of pos (durian spike hit). Returns it, or null. */
+  hitEnemy(pos, radius) {
+    for (let i = 0; i < this.enemies.length; i++) {
+      const enemy = this.enemies[i];
+      const dx = enemy.position.x - pos.x;
+      const dz = enemy.position.z - pos.z;
+      const r = enemy.radius + radius;
+      if (dx * dx + dz * dz <= r * r) {
+        this.group.remove(enemy.group);
+        enemy.dispose();
+        this.enemies.splice(i, 1);
+        return enemy;
+      }
+    }
+    return null;
+  }
+
   update(dt, worm) {
     this.playerLevel = worm.level;
     const focusPos = worm.position;

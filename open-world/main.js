@@ -11,6 +11,14 @@ import { Food } from './src/food/Food.js';
 import { Experience } from './src/food/Experience.js';
 import { LevelUpFx } from './src/fx/LevelUpFx.js';
 import { AudioManager } from './src/audio/AudioManager.js';
+import { Pineapple } from './src/food/Pineapple.js';
+import { Durian } from './src/food/Durian.js';
+import { SpeedBoost } from './src/player/SpeedBoost.js';
+import { DurianSpike } from './src/fx/DurianSpike.js';
+import { SmokeTrail } from './src/fx/SmokeTrail.js';
+import { SpikeShot } from './src/player/SpikeShot.js';
+import { AloeVera } from './src/food/AloeVera.js';
+import { InvincibilitySkill } from './src/player/InvincibilitySkill.js';
 
 // New seed each load => new map
 const seed = (Math.random() * 1e9) | 0;
@@ -41,8 +49,19 @@ const levelUpFx = new LevelUpFx(engine.scene);
 const audio = new AudioManager();
 const menu = new GameMenu();
 let phase = 'ready';
+const pineapple = new Pineapple(engine.scene, (x, z) => world.heightAt(x, z));
+const durian = new Durian(engine.scene, (x, z) => world.heightAt(x, z));
+const speedBoost = new SpeedBoost(worm, hud);
+const durianSpike = new DurianSpike(engine.scene, world.enemies, (x, z) => world.heightAt(x, z));
+const spikeShot = new SpikeShot(worm, hud, durianSpike);
+const aloeVera = new AloeVera(engine.scene, (x, z) => world.heightAt(x, z));
+const invincibilitySkill = new InvincibilitySkill(worm, hud);
+const smoke = new SmokeTrail(engine.scene);
 
 food.onEat(() => { experience.gain(1); audio.chomp(); });
+pineapple.onEat(() => { speedBoost.grant(); audio.chomp(); });
+durian.onEat(() => { spikeShot.grant(); audio.chomp(); });
+aloeVera.onEat(() => { invincibilitySkill.grant(); audio.chomp(); });
 experience.onLevelUp(() => { levelUpFx.play(worm.position); audio.levelUp(); });
 world.enemies.onPlayerHit(() => audio.hurt());
 world.enemies.onEnemyEaten(() => audio.whee());
@@ -63,9 +82,14 @@ menu.showStart();
 player.update(0);
 
 addEventListener('keydown', (e) => {
-  if (e.code !== 'F3' || e.repeat) return;
-  e.preventDefault();
-  world.enemies.toggleDebug();
+  if (e.repeat) return;
+  if (e.code === 'F3') {
+    e.preventDefault();
+    world.enemies.toggleDebug();
+  }
+  if (e.code === 'KeyQ' && player.controls.isLocked) speedBoost.tryActivate();
+  if (e.code === 'KeyE' && player.controls.isLocked && spikeShot.tryActivate()) audio.quip();
+  if (e.code === 'KeyR' && player.controls.isLocked) invincibilitySkill.tryActivate();
 });
 
 engine.start((dt) => {
@@ -77,6 +101,13 @@ engine.start((dt) => {
   player.update(dt);
   world.update(dt, camera.position, worm);
   food.update(dt, worm.position);
+  pineapple.update(dt, worm.position);
+  durian.update(dt, worm.position);
+  durianSpike.update(dt);
+  speedBoost.update(dt);
+  invincibilitySkill.update(dt);
+  aloeVera.update(dt, worm.position);
+  smoke.update(dt, worm.position, worm.heading, speedBoost.active && player.moving);
   levelUpFx.update(dt);
   experience.update();
   audio.setRolling(player.moving);

@@ -10,7 +10,7 @@ export const CONFIG = Object.freeze({
   enemyMaxLevel: 8,
   enemyWalkSpeed: 2.4,
   enemyDetectionRadius: 12,
-  enemyDebugMode: true,
+  enemyDebugMode: false,
   // vegetation density per 128x128 terrain tile
   bushesPerTile: 24,
   treesPerTile: 12,

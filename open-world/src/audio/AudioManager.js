@@ -1,5 +1,5 @@
 import { Bgm } from './Bgm.js';
-import { createRolling, chomp, levelUp, hurt, bushRustle, whee } from './Sfx.js';
+import { createRolling, chomp, levelUp, hurt, bushRustle, whee, quip } from './Sfx.js';
 
 /**
  * Owns the AudioContext and every game sound. Browsers block audio before a
@@ -52,5 +52,9 @@ export class AudioManager {
 
   whee() {
     if (this.ctx) whee(this.ctx, this.master);
+  }
+
+  quip() {
+    if (this.ctx) quip(this.ctx, this.master);
   }
 }

@@ -27,6 +27,11 @@ export class Food {
       }),
       foodCount
     );
+    // Instances constantly respawn around the moving worm, so no fixed bounding
+    // sphere stays valid — without this the whole layer vanishes when the sphere
+    // computed at spawn (near the origin) leaves the camera frustum.
+    this.mesh.frustumCulled = false;
+    this.beams.frustumCulled = false;
     scene.add(this.mesh, this.beams);
 
     this.orbs = [];
