@@ -65,6 +65,11 @@ export class Enemy {
     this.debugRing.material.dispose();
   }
 
+  refreshPosition() {
+    this.position.y = this.heightAt(this.position.x, this.position.z);
+    if (this.debugRing.visible) this.#updateDebugRing();
+  }
+
   update(dt, focusPos, canSee = () => true) {
     this.time += dt;
     this.turnTimer -= dt;
