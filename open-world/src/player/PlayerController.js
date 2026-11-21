@@ -13,6 +13,7 @@ export class PlayerController {
     this.resolveCollision = resolveCollision;
     this.controls = new PointerLockControls(camera, domElement);
     this.keys = {};
+    this.moving = false;
     this.fwd = new THREE.Vector3();
     this.right = new THREE.Vector3();
     this.move = new THREE.Vector3();
@@ -34,6 +35,7 @@ export class PlayerController {
   }
 
   update(dt) {
+    let moving = false;
     if (this.controls.isLocked) {
       const { camera, worm, keys, fwd, right, move } = this;
       camera.getWorldDirection(fwd);
@@ -49,8 +51,10 @@ export class PlayerController {
         move.normalize();
         worm.move(move.x, move.z, dt);
         this.resolveCollision(worm.position, worm.radius);
+        moving = true;
       }
     }
+    this.moving = moving;
     this.worm.update(dt);
     this.#followCamera();
   }

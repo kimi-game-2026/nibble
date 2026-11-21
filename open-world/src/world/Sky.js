@@ -12,6 +12,7 @@ const MOUNTAIN_PEAKS = 48;
 const BANK_RADIUS = 540;     // cloud bank centers on this distance from the camera
 const BANK_SPREAD = 240;     // puffs scatter ±120 in depth, so some sit in front of and some behind the peaks
 const BANK_PUFFS = 20;
+const BANK_DRIFT_SPEED = 0.005; // rad/s — a full lazy orbit around the peaks takes ~20 min
 
 export class Sky {
   constructor(scene, { skyColor }) {
@@ -55,9 +56,10 @@ export class Sky {
    * focusPos: the shadow-casting light tracks the character, so shadow
    * direction stays fixed while the camera orbits.
    */
-  update(camPos, focusPos = camPos) {
+  update(camPos, focusPos = camPos, dt = 0) {
     this.dome.position.copy(camPos);
     this.mountains.position.set(camPos.x, 0, camPos.z);
+    this.cloudBank.rotation.y += BANK_DRIFT_SPEED * dt; // slow horizontal drift past the peaks
     this.cloudBank.position.set(camPos.x, 0, camPos.z);
     this.glow.position.copy(camPos).addScaledVector(SUN_DIR, SUN_DISTANCE);
     this.glow.lookAt(camPos);

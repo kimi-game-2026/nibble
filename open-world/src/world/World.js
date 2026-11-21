@@ -46,6 +46,6 @@ export class World {
     this.tiles.update(focusPos);
     this.enemies.update(dt, worm);
     this.clouds.update(dt, focusPos);
-    this.sky.update(camPos, focusPos);
+    this.sky.update(camPos, focusPos, dt);
   }
 }

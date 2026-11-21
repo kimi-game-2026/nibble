@@ -21,6 +21,8 @@ export class Enemies {
     this.enemies = [];
     this.group = new THREE.Group();
     this.spawnTimer = 0;
+    this.playerHitCb = null;
+    this.enemyEatenCb = null;
     scene.add(this.group);
     for (let i = 0; i < this.count; i++) this.#spawn({ x: 0, z: 0 });
   }
@@ -28,6 +30,14 @@ export class Enemies {
   toggleDebug() {
     this.debugMode = !this.debugMode;
     for (const enemy of this.enemies) enemy.setDebug(this.debugMode);
+  }
+
+  onPlayerHit(cb) {
+    this.playerHitCb = cb;
+  }
+
+  onEnemyEaten(cb) {
+    this.enemyEatenCb = cb;
   }
 
   update(dt, worm) {
@@ -44,9 +54,10 @@ export class Enemies {
           enemy.dispose();
           this.enemies.splice(i, 1);
           worm.addExperience(enemy.level);
+          this.enemyEatenCb?.(enemy.level);
           continue;
         }
-        worm.takeHit();
+        if (worm.takeHit()) this.playerHitCb?.();
       }
       if (enemy.position.distanceToSquared(focusPos) > this.despawnRadius * this.despawnRadius) {
         this.group.remove(enemy.group);
