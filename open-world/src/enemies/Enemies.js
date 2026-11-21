@@ -44,7 +44,7 @@ export class Enemies {
     const focusPos = worm.position;
     for (let i = this.enemies.length - 1; i >= 0; i--) {
       const enemy = this.enemies[i];
-      enemy.update(dt, focusPos, this.canSee);
+      enemy.update(dt, focusPos, this.canSee, worm.level);
       const dx = enemy.position.x - focusPos.x;
       const dz = enemy.position.z - focusPos.z;
       const collisionRadius = enemy.radius + worm.radius;

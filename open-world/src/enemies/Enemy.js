@@ -4,6 +4,7 @@ import { CreatureModel, LEVEL_COLORS } from '../creatures/CreatureModel.js';
 const TAU = Math.PI * 2;
 const TURN_SPEED = 2.8;
 const CHASE_SPEED_MULTIPLIER = 1.35;
+const FLEE_SPEED_MULTIPLIER = 1.2;
 const DEBUG_SEGMENTS = 64;
 const LABEL_MATERIALS = LEVEL_COLORS.map((color, i) => makeLabelMaterial(i + 1, color));
 
@@ -45,6 +46,7 @@ export class Enemy {
     this.walkSpeed = config.enemyWalkSpeed * (0.85 + rng() * 0.3) / (1 + (level - 1) * 0.06);
     this.detectionRadius = config.enemyDetectionRadius + (level - 1) * 1.5;
     this.chasing = false;
+    this.fleeing = false;
     this.moveAmount = 1;
     this.targetMoveAmount = 1;
     this.time = rng() * TAU;
@@ -70,24 +72,30 @@ export class Enemy {
     if (this.debugRing.visible) this.#updateDebugRing();
   }
 
-  update(dt, focusPos, canSee = () => true) {
+  update(dt, focusPos, canSee = () => true, playerLevel = 1) {
     this.time += dt;
     this.turnTimer -= dt;
     const dx = focusPos.x - this.position.x;
     const dz = focusPos.z - this.position.z;
     const distance = Math.hypot(dx, dz);
-    const wasChasing = this.chasing;
-    const chasing = distance <= this.detectionRadius && canSee(this.position, focusPos);
-    if (chasing !== this.chasing) {
+    const wasAlert = this.chasing || this.fleeing;
+    const detected = distance <= this.detectionRadius && canSee(this.position, focusPos);
+    const fleeing = detected && this.level <= playerLevel;
+    const chasing = detected && !fleeing;
+    if (chasing !== this.chasing || fleeing !== this.fleeing) {
       this.chasing = chasing;
-      this.debugRing.material.color.set(chasing ? 0xff3b30 : 0x48cae4);
+      this.fleeing = fleeing;
+      this.debugRing.material.color.set(chasing ? 0xff3b30 : fleeing ? 0xffb703 : 0x48cae4);
     }
 
-    if (chasing) {
+    if (fleeing) {
+      if (distance > 0.001) this.targetHeading = Math.atan2(-dx, -dz);
+      this.targetMoveAmount = 1;
+    } else if (chasing) {
       if (distance > 0.001) this.targetHeading = Math.atan2(dx, dz);
       this.targetMoveAmount = distance > 0.8 + this.model.scale.x * 0.6 ? 1 : 0;
     } else {
-      if (wasChasing) this.turnTimer = 0;
+      if (wasAlert) this.turnTimer = 0;
       if (this.turnTimer <= 0) {
         this.turnTimer = 1.8 + this.rng() * 3.2;
         this.targetHeading = this.heading + (this.rng() - 0.5) * Math.PI * 1.6;
@@ -99,7 +107,8 @@ export class Enemy {
     const turn = Math.atan2(Math.sin(difference), Math.cos(difference));
     this.heading += turn * Math.min(1, TURN_SPEED * dt);
     this.moveAmount += (this.targetMoveAmount - this.moveAmount) * Math.min(1, dt * 4);
-    const speed = this.walkSpeed * (chasing ? CHASE_SPEED_MULTIPLIER : 1);
+    const speedMultiplier = chasing ? CHASE_SPEED_MULTIPLIER : fleeing ? FLEE_SPEED_MULTIPLIER : 1;
+    const speed = this.walkSpeed * speedMultiplier;
     this.position.x += Math.sin(this.heading) * speed * this.moveAmount * dt;
     this.position.z += Math.cos(this.heading) * speed * this.moveAmount * dt;
     this.position.y = this.heightAt(this.position.x, this.position.z);
