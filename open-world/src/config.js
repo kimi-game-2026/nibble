@@ -3,7 +3,6 @@ export const CONFIG = Object.freeze({
   terrainFrequency: 0.012,
   skyColor: 0x87ceeb,
   walkSpeed: 14,
-  playerRadius: 0.5,
   enemyCount: 32,
   enemyMinSpawnRadius: 14,
   enemySpawnRadius: 95,

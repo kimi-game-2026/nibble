@@ -39,6 +39,5 @@ export class Experience {
   #setCharacter(level) {
     this.character = this.characters[level - 1] ?? this.characters[this.characters.length - 1];
     this.hud.setCharacter('Nibble', this.character.name);
-    this.worm.setColors(...this.character.colors);
   }
 }
