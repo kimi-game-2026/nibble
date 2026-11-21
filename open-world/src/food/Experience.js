@@ -13,6 +13,7 @@ export class Experience {
       this.levelUpCb?.(this.character, level);
     });
     this.worm.onLevelDown((level) => this.#setCharacter(level));
+    this.#setCharacter(this.worm.level);
     this.update();
   }
 
@@ -38,6 +39,6 @@ export class Experience {
 
   #setCharacter(level) {
     this.character = this.characters[level - 1] ?? this.characters[this.characters.length - 1];
-    this.hud.setCharacter('Nibble', this.character.name);
+    this.hud.setCharacter(this.character.title, this.character.name, this.character.level);
   }
 }

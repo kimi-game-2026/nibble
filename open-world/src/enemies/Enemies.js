@@ -50,7 +50,8 @@ export class Enemies {
       const dx = enemy.position.x - focusPos.x;
       const dz = enemy.position.z - focusPos.z;
       const collisionRadius = enemy.radius + worm.radius;
-      if (dx * dx + dz * dz <= collisionRadius * collisionRadius) {
+      const d2 = dx * dx + dz * dz;
+      if (d2 <= collisionRadius * collisionRadius) {
         if (enemy.level <= worm.level) {
           this.group.remove(enemy.group);
           enemy.dispose();
@@ -59,7 +60,14 @@ export class Enemies {
           this.enemyEatenCb?.(enemy.level);
           continue;
         }
-        if (worm.takeHit()) this.playerHitCb?.();
+        // Latch on contact: at most one hit per touch — the enemy must fully
+        // separate before it can hit again (no chain-hitting a cornered worm).
+        if (!enemy.hitLatched) {
+          enemy.hitLatched = true;
+          if (worm.takeHit()) this.playerHitCb?.();
+        }
+      } else if (d2 > (collisionRadius + 1.5) * (collisionRadius + 1.5)) {
+        enemy.hitLatched = false; // hysteresis so the latch can't flicker at the boundary
       }
       if (enemy.position.distanceToSquared(focusPos) > this.despawnRadius * this.despawnRadius) {
         this.group.remove(enemy.group);

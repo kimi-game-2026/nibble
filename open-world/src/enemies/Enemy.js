@@ -48,6 +48,7 @@ export class Enemy {
     this.detectionRadius = config.enemyDetectionRadius + (level - 1) * 1.5;
     this.chasing = false;
     this.fleeing = false;
+    this.hitLatched = false; // true while overlapping the player — blocks repeat hits until separation
     this.moveAmount = 1;
     this.targetMoveAmount = 1;
     this.time = rng() * TAU;
