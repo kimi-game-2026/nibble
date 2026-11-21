@@ -22,11 +22,11 @@ export class Worm {
     this.segments = [];
 
     const geo = new THREE.SphereGeometry(1, 16, 12);
-    const matA = new THREE.MeshLambertMaterial({ color: 0xe5989b });
-    const matB = new THREE.MeshLambertMaterial({ color: 0xd97f86 });
+    this.matA = new THREE.MeshLambertMaterial({ color: 0xe5989b });
+    this.matB = new THREE.MeshLambertMaterial({ color: 0xd97f86 });
     for (let i = 0; i < SEGMENT_COUNT; i++) {
       const r = HEAD_RADIUS * (1 - (i / SEGMENT_COUNT) * TAPER);
-      const seg = new THREE.Mesh(geo, i % 2 === 0 ? matA : matB);
+      const seg = new THREE.Mesh(geo, i % 2 === 0 ? this.matA : this.matB);
       seg.scale.setScalar(r);
       seg.userData.radius = r;
       this.segments.push(seg);
@@ -44,6 +44,12 @@ export class Worm {
     }
 
     applyShadows(this.group, { cast: true, receive: true });
+  }
+
+  /** Swap the body stripe colors (placeholder character change on level-up). */
+  setColors(a, b) {
+    this.matA.color.set(a);
+    this.matB.color.set(b);
   }
 
   setPosition(x, z) {

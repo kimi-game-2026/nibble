@@ -17,6 +17,43 @@
   #overlay h1 { margin: 0; font-size: 32px; font-weight: 600; }
   #overlay p { margin: 0; opacity: 0.85; font-size: 15px; }
   #overlay.hidden { display: none; }
+  #hud {
+    position: fixed; top: 5vh; left: 25vw; z-index: 5;
+    pointer-events: none; user-select: none;
+    font-family: system-ui, -apple-system, sans-serif;
+  }
+  #hud .portrait {
+    width: 9vw; height: 9vw; border-radius: 50%;
+    border: 3px solid #2b2b2b; overflow: hidden;
+    background: #dff1fa; position: relative; z-index: 2;
+  }
+  #hud .portrait canvas { width: 100%; height: 100%; display: block; }
+  #hud .xp-bar {
+    position: absolute; left: 9vw; top: 4.5vw;
+    width: 39vw; height: 2.2vw;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.45);
+    border: 3px solid #2b2b2b; border-radius: 1.1vw;
+    overflow: hidden;
+  }
+  #hud .xp-fill {
+    position: absolute; inset: 0; width: 0%;
+    background: #6fbf5a; border-radius: 0.9vw;
+    transition: width 0.25s ease-out;
+  }
+  #hud .label {
+    margin-top: 0.6vw; width: 9vw; text-align: center;
+    font-size: 1.3vw; font-weight: 700; color: #ffffff;
+    text-shadow:
+      -1px -1px 0 #2b2b2b, 1px -1px 0 #2b2b2b,
+      -1px 1px 0 #2b2b2b, 1px 1px 0 #2b2b2b,
+      0 2px 4px rgba(0, 0, 0, 0.4);
+  }
+  #hud .xp-bar.level-up { animation: hud-levelup 0.5s ease-out; }
+  @keyframes hud-levelup {
+    0% { box-shadow: 0 0 0 rgba(110, 191, 90, 0.9); }
+    100% { box-shadow: 0 0 24px rgba(110, 191, 90, 0); }
+  }
 </style>
 <script type="importmap">
 {

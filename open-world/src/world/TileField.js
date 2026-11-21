@@ -6,7 +6,7 @@ import { createRng, hashCoords } from '../math/rng.js';
 const TILE_SIZE = 128;
 const TILE_SEGMENTS = 64;
 const RADIUS = 2;            // tiles kept around the player => 5x5 = 640u span
-const BUILDS_PER_FRAME = 2;  // spread generation cost over frames
+const BUILDS_PER_FRAME = 1;  // spread generation cost over frames
 
 /**
  * Endless terrain + vegetation, generated tile by tile around a moving focus.

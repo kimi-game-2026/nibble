@@ -5,6 +5,10 @@ import { PerlinNoise } from './src/math/PerlinNoise.js';
 import { World } from './src/world/World.js';
 import { Worm } from './src/player/Worm.js';
 import { PlayerController } from './src/player/PlayerController.js';
+import { Hud } from './src/ui/Hud.js';
+import { Food } from './src/food/Food.js';
+import { Experience } from './src/food/Experience.js';
+import { LevelUpFx } from './src/fx/LevelUpFx.js';
 
 // New seed each load => new map
 const seed = (Math.random() * 1e9) | 0;
@@ -29,6 +33,18 @@ const player = new PlayerController(
   CONFIG
 );
 
+const hud = new Hud();
+const food = new Food(engine.scene, (x, z) => world.heightAt(x, z), CONFIG);
+const experience = new Experience(hud);
+const levelUpFx = new LevelUpFx(engine.scene);
+
+food.onEat(() => experience.gain(1));
+experience.onLevelUp((character) => {
+  hud.setCharacter('Nibble', character.name);
+  worm.setColors(...character.colors);
+  levelUpFx.play(worm.position);
+});
+
 const overlay = document.getElementById('overlay');
 overlay.addEventListener('click', () => player.lock());
 player.onLock(() => overlay.classList.add('hidden'));
@@ -42,4 +58,6 @@ addEventListener('keydown', (e) => {
 engine.start((dt) => {
   player.update(dt);
   world.update(dt, camera.position, worm.position);
+  food.update(dt, worm.position);
+  levelUpFx.update(dt);
 });

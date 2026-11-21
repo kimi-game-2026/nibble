@@ -9,6 +9,9 @@ const SHADOW_AREA = 45;      // shadow camera covers ±45 units around the focus
 const LIGHT_DISTANCE = 180;
 const MOUNTAIN_RADIUS = 620;
 const MOUNTAIN_PEAKS = 48;
+const BANK_RADIUS = 540;     // cloud bank centers on this distance from the camera
+const BANK_SPREAD = 240;     // puffs scatter ±120 in depth, so some sit in front of and some behind the peaks
+const BANK_PUFFS = 20;
 
 export class Sky {
   constructor(scene, { skyColor }) {
@@ -19,13 +22,14 @@ export class Sky {
     scene.fog = new THREE.Fog(this.horizon, FOG_NEAR, FOG_FAR);
     this.dome = this.#buildDome();
     this.mountains = this.#buildMountains();
-    scene.add(this.dome, this.mountains);
+    this.cloudBank = this.#buildCloudBank();
+    scene.add(this.dome, this.mountains, this.cloudBank);
 
     scene.add(new THREE.HemisphereLight(0xcfe8ff, 0x6f9a5e, 1.1));
     this.sunLight = new THREE.DirectionalLight(0xfff3e0, 2.0);
     this.sunLight.castShadow = true;
     const shadow = this.sunLight.shadow;
-    shadow.mapSize.set(2048, 2048);
+    shadow.mapSize.set(1024, 1024); // ±45u area => ~0.09u/texel, still crisp
     shadow.camera.left = shadow.camera.bottom = -SHADOW_AREA;
     shadow.camera.right = shadow.camera.top = SHADOW_AREA;
     shadow.camera.near = 10;
@@ -47,13 +51,14 @@ export class Sky {
   }
 
   /**
-   * camPos: sky dome, mountains + sun disc track the camera (visual infinity).
+   * camPos: sky dome, mountains, cloud bank + sun disc track the camera (visual infinity).
    * focusPos: the shadow-casting light tracks the character, so shadow
    * direction stays fixed while the camera orbits.
    */
   update(camPos, focusPos = camPos) {
     this.dome.position.copy(camPos);
     this.mountains.position.set(camPos.x, 0, camPos.z);
+    this.cloudBank.position.set(camPos.x, 0, camPos.z);
     this.glow.position.copy(camPos).addScaledVector(SUN_DIR, SUN_DISTANCE);
     this.glow.lookAt(camPos);
     this.disc.position.copy(camPos).addScaledVector(SUN_DIR, SUN_DISTANCE - 1);
@@ -121,5 +126,25 @@ export class Sky {
     return new THREE.Mesh(geo, new THREE.MeshBasicMaterial({
       vertexColors: true, fog: false, side: THREE.DoubleSide, toneMapped: false
     }));
+  }
+
+  /** Low, wide, pale puffs hugging the mountain bases so the peaks read as standing in haze. */
+  #buildCloudBank() {
+    const puffGeo = new THREE.IcosahedronGeometry(1, 1);
+    const mat = new THREE.MeshLambertMaterial({
+      color: 0xffffff, emissive: 0xdcecf4, flatShading: true,
+      transparent: true, opacity: 0.85, fog: false
+    });
+    const bank = new THREE.Group();
+    for (let i = 0; i < BANK_PUFFS; i++) {
+      const ang = (i / BANK_PUFFS) * Math.PI * 2 + (Math.random() - 0.5) * 0.25;
+      const r = BANK_RADIUS + (Math.random() - 0.5) * BANK_SPREAD;
+      const puff = new THREE.Mesh(puffGeo, mat);
+      puff.position.set(Math.cos(ang) * r, 40 + Math.random() * 50, Math.sin(ang) * r);
+      puff.scale.set(40 + Math.random() * 50, 12 + Math.random() * 14, 22 + Math.random() * 26);
+      puff.rotation.y = Math.random() * Math.PI;
+      bank.add(puff);
+    }
+    return bank;
   }
 }

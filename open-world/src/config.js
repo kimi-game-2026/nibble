@@ -17,5 +17,6 @@ export const CONFIG = Object.freeze({
   treesPerTile: 12,
   flowersPerTile: 20,
   cloudCount: 16,
+  foodCount: 40,
   fov: 70,
 });
