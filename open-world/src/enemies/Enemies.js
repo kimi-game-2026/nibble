@@ -15,6 +15,7 @@ export class Enemies {
     this.spawnRadius = config.enemySpawnRadius;
     this.despawnRadius = config.enemyDespawnRadius;
     this.maxLevel = config.enemyMaxLevel;
+    this.playerLevel = 1;
     this.debugMode = config.enemyDebugMode;
     this.canSee = canSee;
     this.rng = createRng(seed ^ 0x9e3779b9);
@@ -41,6 +42,7 @@ export class Enemies {
   }
 
   update(dt, worm) {
+    this.playerLevel = worm.level;
     const focusPos = worm.position;
     for (let i = this.enemies.length - 1; i >= 0; i--) {
       const enemy = this.enemies[i];
@@ -144,7 +146,8 @@ export class Enemies {
     const distance = Math.sqrt(minSq + this.rng() * (maxSq - minSq));
     const x = focusPos.x + Math.sin(angle) * distance;
     const z = focusPos.z + Math.cos(angle) * distance;
-    const level = Math.min(this.maxLevel, 1 + Math.floor(Math.pow(this.rng(), 1.8) * this.maxLevel));
+    const levelCap = Math.min(this.maxLevel, this.playerLevel + 2);
+    const level = 1 + Math.floor(Math.pow(this.rng(), 1.8) * levelCap);
     const rng = createRng((this.rng() * 0xffffffff) >>> 0);
     const enemy = new Enemy(level, x, z, this.heightAt, rng, this.config, this.debugMode);
     this.enemies.push(enemy);

@@ -5,6 +5,7 @@ const TAU = Math.PI * 2;
 const TURN_SPEED = 2.8;
 const CHASE_SPEED_MULTIPLIER = 1.35;
 const FLEE_SPEED_MULTIPLIER = 1.2;
+const LEVEL_SPEED_STEP = 0.25;
 const DEBUG_SEGMENTS = 64;
 const LABEL_MATERIALS = LEVEL_COLORS.map((color, i) => makeLabelMaterial(i + 1, color));
 
@@ -43,7 +44,7 @@ export class Enemy {
     this.heading = rng() * TAU;
     this.targetHeading = this.heading;
     this.turnTimer = 1 + rng() * 3;
-    this.walkSpeed = config.enemyWalkSpeed * (0.85 + rng() * 0.3) / (1 + (level - 1) * 0.06);
+    this.walkSpeed = config.enemyWalkSpeed * (1 + (level - 1) * LEVEL_SPEED_STEP);
     this.detectionRadius = config.enemyDetectionRadius + (level - 1) * 1.5;
     this.chasing = false;
     this.fleeing = false;
@@ -99,7 +100,7 @@ export class Enemy {
       if (this.turnTimer <= 0) {
         this.turnTimer = 1.8 + this.rng() * 3.2;
         this.targetHeading = this.heading + (this.rng() - 0.5) * Math.PI * 1.6;
-        this.targetMoveAmount = this.rng() < 0.25 ? 0 : 0.65 + this.rng() * 0.5;
+        this.targetMoveAmount = this.rng() < 0.25 ? 0 : 1;
       }
     }
 
