@@ -6,6 +6,7 @@ import { Flowers } from './Flowers.js';
 import { Clouds } from './Clouds.js';
 import { TileField } from './TileField.js';
 import { Collisions } from '../physics/Collisions.js';
+import { Enemies } from '../enemies/Enemies.js';
 
 const CLUSTER_FREQUENCY = 0.025; // low-frequency mask => groves, thickets, clearings
 
@@ -17,6 +18,7 @@ export class World {
     const densityAt = (x, z) => noise.fbm(x * CLUSTER_FREQUENCY, z * CLUSTER_FREQUENCY, { octaves: 3 });
     const painters = [new Bushes(config), new Trees(config), new Flowers(config)];
     this.tiles = new TileField(scene, this.terrain, painters, this.collisions, seed, densityAt);
+    this.enemies = new Enemies(scene, (x, z) => this.heightAt(x, z), config, seed);
     this.clouds = new Clouds(config);
     scene.add(this.clouds.group);
   }
@@ -31,6 +33,7 @@ export class World {
 
   update(dt, camPos, focusPos) {
     this.tiles.update(focusPos);
+    this.enemies.update(dt, focusPos);
     this.clouds.update(dt, focusPos);
     this.sky.update(camPos, focusPos);
   }

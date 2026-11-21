@@ -33,6 +33,11 @@ const overlay = document.getElementById('overlay');
 overlay.addEventListener('click', () => player.lock());
 player.onLock(() => overlay.classList.add('hidden'));
 player.onUnlock(() => overlay.classList.remove('hidden'));
+addEventListener('keydown', (e) => {
+  if (e.code !== 'F3' || e.repeat) return;
+  e.preventDefault();
+  world.enemies.toggleDebug();
+});
 
 engine.start((dt) => {
   player.update(dt);
