@@ -41,6 +41,12 @@
     background: #6fbf5a; border-radius: 0.9vw;
     transition: width 0.25s ease-out;
   }
+  #hud .xp-text {
+    position: absolute; inset: 0; z-index: 1;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 1vw; font-weight: 700;
+    text-shadow: 0 1px 3px #2b2b2b;
+  }
   #hud .label {
     margin-top: 0.6vw; width: 9vw; text-align: center;
     font-size: 1.3vw; font-weight: 700; color: #ffffff;
@@ -48,6 +54,11 @@
       -1px -1px 0 #2b2b2b, 1px -1px 0 #2b2b2b,
       -1px 1px 0 #2b2b2b, 1px 1px 0 #2b2b2b,
       0 2px 4px rgba(0, 0, 0, 0.4);
+  }
+  #hud .invincibility {
+    position: absolute; left: 9vw; top: 6.2vw; width: 39vw;
+    text-align: center; color: #ffe66d; font-size: 1.2vw; font-weight: 700;
+    text-shadow: 0 1px 3px #2b2b2b;
   }
   #hud .xp-bar.level-up { animation: hud-levelup 0.5s ease-out; }
   @keyframes hud-levelup {

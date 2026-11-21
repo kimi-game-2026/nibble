@@ -31,9 +31,10 @@ export class World {
     this.collisions.resolve(pos, radius);
   }
 
-  update(dt, camPos, focusPos) {
+  update(dt, camPos, worm) {
+    const focusPos = worm.position;
     this.tiles.update(focusPos);
-    this.enemies.update(dt, focusPos);
+    this.enemies.update(dt, worm);
     this.clouds.update(dt, focusPos);
     this.sky.update(camPos, focusPos);
   }

@@ -9,11 +9,23 @@ const TURN_SPEED = 10;     // heading lerp rate
 const WIGGLE_SPEED = 9;
 const TRAIL_LIMIT = 256;
 const TRAIL_MIN = SEGMENT_COUNT * 4;
+const XP_PER_LEVEL = 5;
+const LEVEL_SCALE_STEP = 0.12;
+const INVINCIBILITY_DURATION = 3;
+const FLASH_RATE = 10;
 
 export class Worm {
-  constructor(heightAt, { walkSpeed }) {
+  constructor(heightAt, { walkSpeed, playerRadius, enemyMaxLevel }) {
     this.heightAt = heightAt;
     this.walkSpeed = walkSpeed;
+    this.playerRadius = playerRadius;
+    this.maxLevel = enemyMaxLevel;
+    this.level = 1;
+    this.experience = 0;
+    this.growthScale = 1;
+    this.invincibilityRemaining = 0;
+    this.levelUpCb = null;
+    this.levelDownCb = null;
     this.heading = 0;
     this.time = 0;
     this.position = new THREE.Vector3(); // head, ground level
@@ -28,6 +40,7 @@ export class Worm {
       const r = HEAD_RADIUS * (1 - (i / SEGMENT_COUNT) * TAPER);
       const seg = new THREE.Mesh(geo, i % 2 === 0 ? this.matA : this.matB);
       seg.scale.setScalar(r);
+      seg.userData.baseRadius = r;
       seg.userData.radius = r;
       this.segments.push(seg);
       this.group.add(seg);
@@ -46,7 +59,50 @@ export class Worm {
     applyShadows(this.group, { cast: true, receive: true });
   }
 
-  /** Swap the body stripe colors (placeholder character change on level-up). */
+  get radius() {
+    return this.playerRadius * this.growthScale;
+  }
+
+  onLevelUp(cb) {
+    this.levelUpCb = cb;
+  }
+
+  onLevelDown(cb) {
+    this.levelDownCb = cb;
+  }
+
+  experienceForNextLevel() {
+    return this.level * XP_PER_LEVEL;
+  }
+
+  addExperience(amount) {
+    if (this.level >= this.maxLevel) return;
+    this.experience += amount;
+    let leveledUp = false;
+    while (this.level < this.maxLevel && this.experience >= this.experienceForNextLevel()) {
+      this.experience -= this.experienceForNextLevel();
+      this.level++;
+      leveledUp = true;
+    }
+    if (this.level >= this.maxLevel) this.experience = 0;
+    if (leveledUp) {
+      this.#applyLevel();
+      this.levelUpCb?.(this.level);
+    }
+  }
+
+  takeHit() {
+    if (this.invincibilityRemaining > 0) return false;
+    const previousLevel = this.level;
+    this.level = Math.max(1, this.level - 1);
+    this.experience = 0;
+    this.invincibilityRemaining = INVINCIBILITY_DURATION;
+    this.#applyLevel();
+    if (this.level < previousLevel) this.levelDownCb?.(this.level);
+    return true;
+  }
+
+  /** Swap the body stripe colors when the shared progression changes form. */
   setColors(a, b) {
     this.matA.color.set(a);
     this.matB.color.set(b);
@@ -71,10 +127,22 @@ export class Worm {
 
   update(dt) {
     this.time += dt;
+    this.invincibilityRemaining = Math.max(0, this.invincibilityRemaining - dt);
     this.position.y = this.heightAt(this.position.x, this.position.z);
     this.trail.unshift(this.position.clone());
     if (this.trail.length > TRAIL_LIMIT) this.trail.pop();
     this.#layout();
+    this.group.visible = this.invincibilityRemaining <= 0
+      || Math.floor(this.invincibilityRemaining * FLASH_RATE) % 2 === 0;
+  }
+
+  #applyLevel() {
+    this.growthScale = 1 + (this.level - 1) * LEVEL_SCALE_STEP;
+    for (const segment of this.segments) {
+      const radius = segment.userData.baseRadius * this.growthScale;
+      segment.scale.setScalar(radius);
+      segment.userData.radius = radius;
+    }
   }
 
   #layout() {
@@ -86,7 +154,7 @@ export class Worm {
     let dist = 0;
     let ti = 0;
     for (let i = 1; i < this.segments.length; i++) {
-      const target = i * SEGMENT_SPACING;
+      const target = i * SEGMENT_SPACING * this.growthScale;
       while (ti < this.trail.length - 2) {
         const a = this.trail[ti], b = this.trail[ti + 1];
         if (dist + a.distanceTo(b) >= target) break;
@@ -100,7 +168,7 @@ export class Worm {
       seg.position.lerpVectors(a, b, t);
 
       // slither: lateral wiggle, stronger toward the tail
-      const wiggle = Math.sin(this.time * WIGGLE_SPEED - i * 1.1) * 0.05 * (i / this.segments.length);
+      const wiggle = Math.sin(this.time * WIGGLE_SPEED - i * 1.1) * 0.05 * this.growthScale * (i / this.segments.length);
       const px = -(b.z - a.z) / segLen;
       const pz = (b.x - a.x) / segLen;
       seg.position.x += px * wiggle;

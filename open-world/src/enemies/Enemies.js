@@ -27,10 +27,24 @@ export class Enemies {
     for (const enemy of this.enemies) enemy.setDebug(this.debugMode);
   }
 
-  update(dt, focusPos) {
+  update(dt, worm) {
+    const focusPos = worm.position;
     for (let i = this.enemies.length - 1; i >= 0; i--) {
       const enemy = this.enemies[i];
       enemy.update(dt, focusPos);
+      const dx = enemy.position.x - focusPos.x;
+      const dz = enemy.position.z - focusPos.z;
+      const collisionRadius = enemy.radius + worm.radius;
+      if (dx * dx + dz * dz <= collisionRadius * collisionRadius) {
+        if (enemy.level <= worm.level) {
+          this.group.remove(enemy.group);
+          enemy.dispose();
+          this.enemies.splice(i, 1);
+          worm.addExperience(enemy.level);
+          continue;
+        }
+        worm.takeHit();
+      }
       if (enemy.position.distanceToSquared(focusPos) > this.despawnRadius * this.despawnRadius) {
         this.group.remove(enemy.group);
         enemy.dispose();

@@ -6,12 +6,11 @@ const CAMERA_ANCHOR_HEIGHT = 2.4; // lifts the view center above the worm, showi
 const CAMERA_MIN_CLEARANCE = 0.6;
 
 export class PlayerController {
-  constructor(camera, domElement, worm, heightAt, resolveCollision, { playerRadius }) {
+  constructor(camera, domElement, worm, heightAt, resolveCollision) {
     this.camera = camera;
     this.worm = worm;
     this.heightAt = heightAt;
     this.resolveCollision = resolveCollision;
-    this.playerRadius = playerRadius;
     this.controls = new PointerLockControls(camera, domElement);
     this.keys = {};
     this.fwd = new THREE.Vector3();
@@ -49,7 +48,7 @@ export class PlayerController {
       if (move.lengthSq() > 0) {
         move.normalize();
         worm.move(move.x, move.z, dt);
-        this.resolveCollision(worm.position, this.playerRadius);
+        this.resolveCollision(worm.position, worm.radius);
       }
     }
     this.worm.update(dt);

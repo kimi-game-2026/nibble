@@ -77,6 +77,7 @@ export class Enemy {
     this.legs = [];
     this.#build();
     this.model.scale.setScalar(0.65 + (level - 1) * 0.22);
+    this.radius = 0.65 * this.model.scale.x;
     this.position.set(x, heightAt(x, z), z);
     this.model.rotation.y = this.heading;
     this.#buildLabel();

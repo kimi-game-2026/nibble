@@ -29,21 +29,16 @@ const player = new PlayerController(
   engine.renderer.domElement,
   worm,
   (x, z) => world.heightAt(x, z),
-  (pos, r) => world.resolveCollisions(pos, r),
-  CONFIG
+  (pos, r) => world.resolveCollisions(pos, r)
 );
 
 const hud = new Hud();
 const food = new Food(engine.scene, (x, z) => world.heightAt(x, z), CONFIG);
-const experience = new Experience(hud);
+const experience = new Experience(hud, worm);
 const levelUpFx = new LevelUpFx(engine.scene);
 
 food.onEat(() => experience.gain(1));
-experience.onLevelUp((character) => {
-  hud.setCharacter('Nibble', character.name);
-  worm.setColors(...character.colors);
-  levelUpFx.play(worm.position);
-});
+experience.onLevelUp(() => levelUpFx.play(worm.position));
 
 const overlay = document.getElementById('overlay');
 overlay.addEventListener('click', () => player.lock());
@@ -57,7 +52,8 @@ addEventListener('keydown', (e) => {
 
 engine.start((dt) => {
   player.update(dt);
-  world.update(dt, camera.position, worm.position);
+  world.update(dt, camera.position, worm);
   food.update(dt, worm.position);
   levelUpFx.update(dt);
+  experience.update();
 });

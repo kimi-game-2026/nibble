@@ -1,13 +1,19 @@
-import { CHARACTERS, MAX_LEVEL } from '../../placeholders/characters/index.js';
+import { CHARACTERS } from '../../placeholders/characters/index.js';
 
 export class Experience {
-  constructor(hud, { characters = CHARACTERS } = {}) {
+  constructor(hud, worm, { characters = CHARACTERS } = {}) {
     this.hud = hud;
+    this.worm = worm;
     this.characters = characters;
-    this.level = 1;
-    this.xp = 0;
     this.character = characters[0];
     this.levelUpCb = null;
+    this.worm.onLevelUp((level) => {
+      this.#setCharacter(level);
+      this.hud.pulse();
+      this.levelUpCb?.(this.character, level);
+    });
+    this.worm.onLevelDown((level) => this.#setCharacter(level));
+    this.update();
   }
 
   onLevelUp(cb) {
@@ -15,20 +21,24 @@ export class Experience {
   }
 
   gain(amount = 1) {
-    if (this.level >= MAX_LEVEL) {
-      this.hud.setExperience(1); // max level: bar stays full
-      return;
-    }
-    this.xp += amount;
-    if (this.xp >= this.character.xpToNext) {
-      this.xp = 0;
-      this.level++;
-      this.character = this.characters[this.level - 1];
-      this.hud.setExperience(0);
-      this.hud.pulse();
-      this.levelUpCb?.(this.character, this.level);
-    } else {
-      this.hud.setExperience(this.xp / this.character.xpToNext);
-    }
+    this.worm.addExperience(amount);
+    this.update();
+  }
+
+  update() {
+    const atMax = this.worm.level >= this.worm.maxLevel;
+    const required = this.worm.experienceForNextLevel();
+    this.hud.setLevel(this.worm.level);
+    this.hud.setExperience(
+      atMax ? 1 : this.worm.experience / required,
+      atMax ? 'MAX' : `${this.worm.experience} / ${required} XP`
+    );
+    this.hud.setInvincibility(this.worm.invincibilityRemaining);
+  }
+
+  #setCharacter(level) {
+    this.character = this.characters[level - 1] ?? this.characters[this.characters.length - 1];
+    this.hud.setCharacter('Nibble', this.character.name);
+    this.worm.setColors(...this.character.colors);
   }
 }

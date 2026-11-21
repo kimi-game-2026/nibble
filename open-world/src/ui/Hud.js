@@ -1,5 +1,6 @@
 export class Hud {
   constructor({ character = 'Nibble', form = 'Worm' } = {}) {
+    this.level = 1;
     this.root = document.createElement('div');
     this.root.id = 'hud';
 
@@ -14,22 +15,40 @@ export class Hud {
     this.bar.className = 'xp-bar';
     this.fill = document.createElement('div');
     this.fill.className = 'xp-fill';
-    this.bar.appendChild(this.fill);
+    this.xpText = document.createElement('div');
+    this.xpText.className = 'xp-text';
+    this.bar.append(this.fill, this.xpText);
 
-    this.root.append(this.portrait, this.bar, this.label);
+    this.invincibility = document.createElement('div');
+    this.invincibility.className = 'invincibility';
+    this.invincibility.hidden = true;
+
+    this.root.append(this.portrait, this.bar, this.label, this.invincibility);
     document.body.appendChild(this.root);
 
     this.setCharacter(character, form);
-    this.setExperience(0);
+    this.setExperience(0, '0 / 5 XP');
   }
 
-  /** ratio in [0, 1] */
-  setExperience(ratio) {
+  setExperience(ratio, text) {
     this.fill.style.width = `${Math.min(1, Math.max(0, ratio)) * 100}%`;
+    this.xpText.textContent = text;
+  }
+
+  setLevel(level) {
+    this.level = level;
+    this.#updateLabel();
   }
 
   setCharacter(name, form = 'Worm') {
-    this.label.textContent = `${name} - ${form}`;
+    this.name = name;
+    this.form = form;
+    this.#updateLabel();
+  }
+
+  setInvincibility(seconds) {
+    this.invincibility.hidden = seconds <= 0;
+    this.invincibility.textContent = `INVINCIBLE ${seconds.toFixed(1)}s`;
   }
 
   /** Brief glow flash on the XP bar (e.g. on level-up). */
@@ -37,6 +56,10 @@ export class Hud {
     this.bar.classList.remove('level-up');
     void this.bar.offsetWidth; // restart the CSS animation
     this.bar.classList.add('level-up');
+  }
+
+  #updateLabel() {
+    this.label.textContent = `${this.name} - ${this.form} · LV ${this.level}`;
   }
 
   #drawPortrait() {
