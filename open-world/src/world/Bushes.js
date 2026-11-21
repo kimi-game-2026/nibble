@@ -1,47 +1,38 @@
 import * as THREE from 'three';
+import { pickScatterSpot } from './scatter.js';
+import { paintPiece } from './paint.js';
 
-const MAX_BLOBS_PER_BUSH = 3;
+const BUSH_GEO = new THREE.IcosahedronGeometry(1, 1);
+const MAX_BLOBS_PER_BUSH = 4;
+const DENSITY_THRESHOLD = -0.12; // loose thickets with gaps between them
 
 export class Bushes {
-  constructor(heightAt, { bushCount, mapSize }) {
-    this.mesh = new THREE.InstancedMesh(
-      new THREE.IcosahedronGeometry(1, 1),
-      new THREE.MeshLambertMaterial({ flatShading: true }),
-      bushCount * MAX_BLOBS_PER_BUSH
-    );
-    this.#scatter(heightAt, bushCount, mapSize);
+  constructor({ bushesPerTile }) {
+    this.perTile = bushesPerTile;
   }
 
-  #scatter(heightAt, count, mapSize) {
+  paint(ctx) {
+    const { rng, densityAt, heightAt, pieces } = ctx;
     const m4 = new THREE.Matrix4();
     const q = new THREE.Quaternion();
-    const scale = new THREE.Vector3();
+    const s = new THREE.Vector3();
     const p = new THREE.Vector3();
     const euler = new THREE.Euler();
     const col = new THREE.Color();
-    let bi = 0;
-    for (let i = 0; i < count; i++) {
-      const bx = (Math.random() - 0.5) * (mapSize - 10);
-      const bz = (Math.random() - 0.5) * (mapSize - 10);
-      if (Math.hypot(bx, bz) < 4) continue; // keep spawn area clear
-      const by = heightAt(bx, bz);
-      const blobs = 1 + ((Math.random() * MAX_BLOBS_PER_BUSH) | 0);
-      for (let j = 0; j < blobs && bi < this.mesh.instanceMatrix.count; j++) {
-        const sc = 0.6 + Math.random() * 1.1;
-        p.set(bx + (Math.random() - 0.5) * 1.6, by + sc * 0.55, bz + (Math.random() - 0.5) * 1.6);
-        q.setFromEuler(euler.set(0, Math.random() * Math.PI, 0));
-        scale.set(
-          sc * (0.9 + Math.random() * 0.4),
-          sc * (0.75 + Math.random() * 0.3),
-          sc * (0.9 + Math.random() * 0.4)
-        );
-        m4.compose(p, q, scale);
-        this.mesh.setMatrixAt(bi, m4);
-        col.setHSL(0.3 + Math.random() * 0.06, 0.5 + Math.random() * 0.2, 0.22 + Math.random() * 0.12);
-        this.mesh.setColorAt(bi, col);
-        bi++;
+    for (let i = 0; i < this.perTile; i++) {
+      const spot = pickScatterSpot(rng, densityAt, ctx, { threshold: DENSITY_THRESHOLD, clearRadius: 4 });
+      if (!spot) continue;
+      const by = heightAt(spot.x, spot.z);
+      const blobs = 2 + ((rng() * (MAX_BLOBS_PER_BUSH - 1)) | 0); // 2-4
+      for (let j = 0; j < blobs; j++) {
+        const sc = 1.2 + rng() * 1.3;
+        p.set(spot.x + (rng() - 0.5) * 2.2, by + sc * 0.5, spot.z + (rng() - 0.5) * 2.2);
+        q.setFromEuler(euler.set(0, rng() * Math.PI, 0));
+        s.set(sc * (0.9 + rng() * 0.4), sc * (0.9 + rng() * 0.35), sc * (0.9 + rng() * 0.4));
+        m4.compose(p, q, s);
+        col.setHSL(0.3 + rng() * 0.06, 0.5 + rng() * 0.2, 0.22 + rng() * 0.12);
+        paintPiece(pieces, BUSH_GEO, m4, col);
       }
     }
-    this.mesh.count = bi;
   }
 }

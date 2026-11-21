@@ -1,13 +1,13 @@
 export const CONFIG = Object.freeze({
-  mapSize: 400,
-  segments: 160,
   heightScale: 12,
   terrainFrequency: 0.012,
   skyColor: 0x87ceeb,
-  fogNear: 80,
-  eyeHeight: 1.8,
   walkSpeed: 14,
-  bushCount: 320,
+  playerRadius: 0.5,
+  // vegetation density per 128x128 terrain tile
+  bushesPerTile: 24,
+  treesPerTile: 12,
+  flowersPerTile: 20,
   cloudCount: 16,
   fov: 70,
 });

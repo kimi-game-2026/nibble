@@ -8,6 +8,10 @@ export class Engine {
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
     this.renderer.setSize(innerWidth, innerHeight);
     this.renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    this.renderer.toneMappingExposure = 1.15;
     document.body.appendChild(this.renderer.domElement);
     addEventListener('resize', () => this.#resize());
   }

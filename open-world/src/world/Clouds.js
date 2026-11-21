@@ -2,11 +2,10 @@ import * as THREE from 'three';
 
 const MIN_ALTITUDE = 45;
 const ALTITUDE_RANGE = 30;
-const WRAP_MARGIN = 60;
+const RANGE = 240; // clouds live within ±RANGE of the focus on both axes
 
 export class Clouds {
-  constructor({ cloudCount, mapSize }) {
-    this.mapSize = mapSize;
+  constructor({ cloudCount }) {
     this.clouds = [];
     this.group = new THREE.Group();
     const puffGeo = new THREE.IcosahedronGeometry(1, 1);
@@ -28,20 +27,22 @@ export class Clouds {
       cloud.add(puff);
     }
     cloud.position.set(
-      (Math.random() - 0.5) * this.mapSize,
+      (Math.random() - 0.5) * RANGE * 2,
       MIN_ALTITUDE + Math.random() * ALTITUDE_RANGE,
-      (Math.random() - 0.5) * this.mapSize
+      (Math.random() - 0.5) * RANGE * 2
     );
     cloud.userData.speed = 1.5 + Math.random() * 2.5;
     this.clouds.push(cloud);
     this.group.add(cloud);
   }
 
-  update(dt) {
-    const limit = this.mapSize / 2 + WRAP_MARGIN;
+  update(dt, focusPos) {
     for (const cloud of this.clouds) {
       cloud.position.x += cloud.userData.speed * dt;
-      if (cloud.position.x > limit) cloud.position.x = -limit;
+      if (cloud.position.x - focusPos.x > RANGE) cloud.position.x -= RANGE * 2;
+      else if (cloud.position.x - focusPos.x < -RANGE) cloud.position.x += RANGE * 2;
+      if (cloud.position.z - focusPos.z > RANGE) cloud.position.z -= RANGE * 2;
+      else if (cloud.position.z - focusPos.z < -RANGE) cloud.position.z += RANGE * 2;
     }
   }
 }
